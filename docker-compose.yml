@@ -1,0 +1,39 @@
+# Ejecución local: PostgreSQL + aplicación Django.
+#   docker compose up --build        -> http://localhost:8000
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: radica
+      POSTGRES_USER: radica
+      POSTGRES_PASSWORD: radica
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U radica -d radica"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://radica:radica@db:5432/radica
+      SECRET_KEY: clave-local-solo-para-desarrollo
+      DEBUG: "1"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      SEED_DEMO: "1"
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-Radica2026!}
+    volumes:
+      - media:/app/media
+      # Las migraciones generadas en el primer arranque quedan en su carpeta (para versionarlas).
+      - ./trazabilidad/migrations:/app/trazabilidad/migrations
+
+volumes:
+  pgdata:
+  media:
