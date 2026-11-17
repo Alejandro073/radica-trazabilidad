@@ -1,0 +1,39 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Radica{% endblock %} · Corposalud</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script src="{% static 'js/app.js' %}" defer></script>
+</head>
+<body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+<header class="barra">
+  <div class="barra-in">
+    <a class="marca" href="{% url 'panel' %}"><span class="marca-icono" aria-hidden="true">R</span> Radica</a>
+    {% if user.is_authenticated %}
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu">Menú</button>
+    <nav id="menu" class="menu" aria-label="Principal">
+      <a href="{% url 'panel' %}" {% if request.resolver_match.url_name == 'panel' %}aria-current="page"{% endif %}>Panel</a>
+      <a href="{% url 'cuenta_lista' %}" {% if 'cuenta' in request.resolver_match.url_name %}aria-current="page"{% endif %}>Cuentas</a>
+      {% if puede_crear %}<a href="{% url 'cuenta_nueva' %}">Nueva cuenta</a>{% endif %}
+      {% if puede_ver_indicadores %}<a href="{% url 'indicadores' %}" {% if request.resolver_match.url_name == 'indicadores' %}aria-current="page"{% endif %}>Indicadores</a>{% endif %}
+      {% if es_administrador %}<a href="{% url 'admin:index' %}">Administración</a>{% endif %}
+      <span class="usuario">{{ user.get_username }} · {{ rol_etiqueta }}</span>
+      <form method="post" action="{% url 'logout' %}" class="salir">{% csrf_token %}<button type="submit" class="btn-enlace">Salir</button></form>
+    </nav>
+    {% endif %}
+  </div>
+</header>
+<main id="contenido" class="contenedor">
+  {% if messages %}
+  <ul class="mensajes" role="status">
+    {% for m in messages %}<li class="msg msg-{{ m.level_tag }}">{{ m }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  {% block contenido %}{% endblock %}
+</main>
+<footer class="pie">Prototipo académico TRL 5 · UNAD · Proyecto de grado · Datos de demostración, no reales</footer>
+</body>
+</html>

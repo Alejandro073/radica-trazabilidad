@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load formato %}
+{% block titulo %}Panel{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <h1>Panel de cuentas</h1>
+  {% if puede_crear %}<a class="btn" href="{% url 'cuenta_nueva' %}">+ Nueva cuenta</a>{% endif %}
+</div>
+
+<section aria-labelledby="h-estados">
+  <h2 id="h-estados">Cuentas por estado <span class="suave">({{ total }} en total)</span></h2>
+  <ul class="estados">
+    {% for valor, etiqueta, n in estados %}
+    <li><a class="estado-tarjeta estado-{{ valor }}" href="{% url 'cuenta_lista' %}?estado={{ valor }}">
+      <span class="n">{{ n }}</span><span class="e">{{ etiqueta }}</span></a></li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section aria-labelledby="h-alertas">
+  <h2 id="h-alertas">Alertas de plazo de radicación <span class="suave">({{ n_alertas }})</span></h2>
+  {% if alertas %}
+  <ul class="lista-alertas">
+    {% for a in alertas %}
+    <li class="alerta alerta-{{ a.nivel }}">
+      <a href="{% url 'cuenta_detalle' a.cuenta.pk %}"><strong>{{ a.cuenta.numero }}</strong></a>
+      <span>{{ a.cuenta.atencion.entidad }} · {{ a.cuenta.get_estado_display }}</span>
+      <span class="chip">{% if a.nivel == 'vencida' %}Vencida hace {{ a.restantes|cut:'-' }} d. háb.{% else %}Quedan {{ a.restantes }} d. háb.{% endif %}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="vacio">No hay cuentas próximas a vencer el plazo de radicación.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="h-rec">
+  <h2 id="h-rec">Últimas cuentas</h2>
+  {% include "trazabilidad/_tabla_cuentas.html" with cuentas=recientes %}
+</section>
+{% endblock %}

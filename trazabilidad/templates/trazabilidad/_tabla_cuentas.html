@@ -1,0 +1,22 @@
+{% load formato %}
+{% if cuentas %}
+<div class="tabla-responsive">
+<table class="tabla">
+  <thead><tr><th>Cuenta</th><th>Paciente</th><th>Entidad</th><th>Servicio</th><th class="num">Valor</th><th>Estado</th></tr></thead>
+  <tbody>
+  {% for c in cuentas %}
+    <tr>
+      <td data-label="Cuenta"><a href="{% url 'cuenta_detalle' c.pk %}">{{ c.numero }}</a></td>
+      <td data-label="Paciente">{{ c.atencion.paciente_nombre }}<br><span class="suave">{{ c.atencion.paciente_documento }}</span></td>
+      <td data-label="Entidad">{{ c.atencion.entidad }}</td>
+      <td data-label="Servicio">{{ c.atencion.get_tipo_servicio_display }}</td>
+      <td data-label="Valor" class="num">{{ c.valor|cop }}</td>
+      <td data-label="Estado"><span class="chip estado-{{ c.estado }}">{{ c.get_estado_display }}{% if c.resultado %} · {{ c.get_resultado_display }}{% endif %}</span></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="vacio">No hay cuentas para mostrar.</p>
+{% endif %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titulo %}Cuentas{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <h1>Cuentas médicas</h1>
+  {% if puede_crear %}<a class="btn" href="{% url 'cuenta_nueva' %}">+ Nueva cuenta</a>{% endif %}
+</div>
+<form class="filtros" method="get">
+  <div><label for="q">Buscar</label><input id="q" name="q" value="{{ q }}" placeholder="N.º de cuenta, documento o nombre"></div>
+  <div><label for="estado">Estado</label>
+    <select id="estado" name="estado"><option value="">Todos</option>
+      {% for v, e in estados %}<option value="{{ v }}" {% if v == estado %}selected{% endif %}>{{ e }}</option>{% endfor %}
+    </select></div>
+  <div><label for="entidad">Entidad</label>
+    <select id="entidad" name="entidad"><option value="">Todas</option>
+      {% for e in entidades %}<option value="{{ e.pk }}" {% if e.pk|stringformat:"s" == entidad %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}
+    </select></div>
+  <div class="acciones"><button class="btn" type="submit">Filtrar</button> <a class="btn btn-sec" href="{% url 'cuenta_lista' %}">Limpiar</a></div>
+</form>
+{% include "trazabilidad/_tabla_cuentas.html" with cuentas=pagina %}
+{% if pagina.paginator.num_pages > 1 %}
+<nav class="paginas" aria-label="Paginación">
+  {% if pagina.has_previous %}<a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pagina.previous_page_number }}">← Anterior</a>{% endif %}
+  <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if pagina.has_next %}<a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pagina.next_page_number }}">Siguiente →</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

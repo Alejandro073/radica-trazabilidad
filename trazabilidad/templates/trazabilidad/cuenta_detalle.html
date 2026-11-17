@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load formato %}
+{% block titulo %}{{ cuenta.numero }}{% endblock %}
+{% block contenido %}
+<p><a href="{% url 'cuenta_lista' %}">← Volver a cuentas</a></p>
+<div class="encabezado">
+  <div>
+    <h1>{{ cuenta.numero }}</h1>
+    <p class="suave">{{ cuenta.atencion.paciente_nombre }} · {{ cuenta.atencion.paciente_documento }}</p>
+  </div>
+  <span class="chip grande estado-{{ cuenta.estado }}">{{ cuenta.get_estado_display }}{% if cuenta.resultado %} · {{ cuenta.get_resultado_display }}{% endif %}</span>
+</div>
+
+{% if alerta %}
+<p class="alerta alerta-{{ alerta }}" role="alert">
+  {% if alerta == 'vencida' %}El plazo de radicación está vencido ({{ restantes|cut:'-' }} días hábiles de retraso).
+  {% else %}Plazo de radicación por vencer: quedan {{ restantes }} días hábiles de {{ cuenta.atencion.entidad.plazo_radicacion_dias }}.{% endif %}
+</p>
+{% endif %}
+
+<ol class="pasos" aria-label="Estado de la cuenta">
+  {% for p in pasos %}<li class="paso {{ p.clase }}" {% if p.clase == 'actual' %}aria-current="step"{% endif %}><span class="bola">{% if p.clase == 'hecho' %}✓{% else %}{{ p.n }}{% endif %}</span><span class="txt">{{ p.etiqueta }}</span></li>{% endfor %}
+</ol>
+
+<div class="rejilla">
+  <section class="tarjeta" aria-labelledby="h-datos">
+    <h2 id="h-datos">Datos de la cuenta</h2>
+    <dl class="datos">
+      <dt>Entidad</dt><dd>{{ cuenta.atencion.entidad }}</dd>
+      <dt>Servicio</dt><dd>{{ cuenta.atencion.get_tipo_servicio_display }}</dd>
+      <dt>Ingreso</dt><dd>{{ cuenta.atencion.fecha_ingreso|date:"d/m/Y" }}</dd>
+      <dt>Egreso</dt><dd>{{ cuenta.atencion.fecha_egreso|date:"d/m/Y"|default:"—" }}</dd>
+      <dt>Valor facturado</dt><dd>{{ cuenta.valor|cop }}</dd>
+      <dt>Radicación</dt><dd>{{ cuenta.fecha_radicacion|date:"d/m/Y"|default:"—" }}</dd>
+    </dl>
+    {% if acciones or puede_validar or puede_aceptar %}
+    <div class="acciones">
+      {% for a in acciones %}
+      <form method="post" action="{% url 'cuenta_estado' cuenta.pk %}">{% csrf_token %}
+        <input type="hidden" name="destino" value="{{ a.destino }}"><button class="btn" type="submit">{{ a.etiqueta }}</button></form>
+      {% endfor %}
+      {% if puede_validar %}
+      <form method="post" action="{% url 'cuenta_validar' cuenta.pk %}">{% csrf_token %}<button class="btn" type="submit">Validar documentación</button></form>
+      {% endif %}
+      {% if puede_aceptar %}
+      <form method="post" action="{% url 'cuenta_aceptar' cuenta.pk %}">{% csrf_token %}<button class="btn btn-sec" type="submit">Registrar aceptación</button></form>
+      {% endif %}
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="tarjeta" aria-labelledby="h-sop">
+    <h2 id="h-sop">Soportes obligatorios</h2>
+    {% if soportes_estado.sin_reglas %}
+      <p class="alerta alerta-por_vencer">No hay soportes parametrizados para esta entidad y servicio; la cuenta no podrá superar la validación.</p>
+    {% else %}
+    <ul class="checklist">
+      {% for tipo, ok in soportes_estado.detalle %}
+      <li class="{% if ok %}ok{% else %}falta{% endif %}"><span aria-hidden="true">{% if ok %}✓{% else %}○{% endif %}</span> {{ tipo.nombre }} <span class="suave">{% if ok %}(cargado){% else %}(falta){% endif %}</span></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if soportes %}
+    <h3>Cargados</h3>
+    <ul class="lista-simple">
+      {% for s in soportes %}
+      <li>{{ s.tipo.nombre }} — {% if s.archivo %}<a href="{% url 'soporte_descargar' s.pk %}">{{ s.nombre_archivo }}</a>{% else %}{{ s.nombre_archivo|default:"(demostración)" }}{% endif %}
+        <span class="suave">· {{ s.fecha|date:"d/m/Y H:i" }}{% if s.cargado_por %} · {{ s.cargado_por.get_username }}{% endif %}</span></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if puede_cargar %}
+    <form method="post" action="{% url 'soporte_subir' cuenta.pk %}" enctype="multipart/form-data" class="formulario compacto">
+      {% csrf_token %}
+      <div class="campo"><label for="{{ form_soporte.tipo.id_for_label }}">{{ form_soporte.tipo.label }}</label>{{ form_soporte.tipo }}</div>
+      <div class="campo"><label for="{{ form_soporte.archivo.id_for_label }}">{{ form_soporte.archivo.label }}</label>{{ form_soporte.archivo }}</div>
+      <button class="btn" type="submit">Cargar soporte</button>
+    </form>
+    {% endif %}
+  </section>
+</div>
+
+{% if glosas or puede_glosar %}
+<section class="tarjeta" aria-labelledby="h-glo">
+  <h2 id="h-glo">Glosas</h2>
+  {% for g in glosas %}
+  <article class="glosa">
+    <p><strong>{{ g.get_causal_display }}</strong> · {{ g.valor_glosado|cop }} <span class="suave">· {{ g.fecha|date:"d/m/Y" }}</span></p>
+    {% if g.descripcion %}<p>{{ g.descripcion }}</p>{% endif %}
+    {% if g.respondida %}
+      <p class="ok">Respondida el {{ g.fecha_respuesta|date:"d/m/Y" }}: {{ g.respuesta }}</p>
+    {% elif puede_responder %}
+      <form method="post" action="{% url 'glosa_responder' g.pk %}" class="formulario compacto">{% csrf_token %}
+        <div class="campo"><label for="resp-{{ g.pk }}">Respuesta a la glosa</label>
+        <textarea name="respuesta" id="resp-{{ g.pk }}" rows="2" maxlength="500" required></textarea></div>
+        <button class="btn btn-sec" type="submit">Responder</button></form>
+    {% else %}<p class="suave">Pendiente de respuesta.</p>{% endif %}
+  </article>
+  {% endfor %}
+  {% if puede_glosar %}
+  <details class="nueva-glosa" {% if not glosas %}open{% endif %}>
+    <summary>Registrar glosa</summary>
+    <form method="post" action="{% url 'glosa_nueva' cuenta.pk %}" class="formulario compacto">{% csrf_token %}
+      {% for campo in form_glosa %}<div class="campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}</div>{% endfor %}
+      <button class="btn" type="submit">Guardar glosa</button>
+    </form>
+  </details>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="tarjeta" aria-labelledby="h-tl">
+  <h2 id="h-tl">Línea de tiempo (trazabilidad)</h2>
+  <ol class="linea">
+    {% for e in eventos %}
+    <li><span class="punto"></span>
+      <div><strong>{{ e.get_tipo_display }}</strong> <span class="suave">· {{ e.fecha|date:"d/m/Y H:i" }} · {% if e.usuario %}{{ e.usuario.get_username }}{% else %}sistema{% endif %}</span>
+      {% if e.detalle %}<br>{{ e.detalle }}{% endif %}</div></li>
+    {% endfor %}
+  </ol>
+</section>
+{% endblock %}

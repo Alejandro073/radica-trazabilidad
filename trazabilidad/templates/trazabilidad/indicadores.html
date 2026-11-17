@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load formato %}
+{% block titulo %}Indicadores{% endblock %}
+{% block contenido %}
+<div class="encabezado"><h1>Indicadores de gestión</h1><span class="suave">Con corte al {{ hoy|date:"d/m/Y" }}</span></div>
+
+<ul class="kpis">
+  <li class="kpi"><span class="kpi-n">{{ d.glosas.pct_cuentas|pct }}</span><span class="kpi-t">Cuentas glosadas</span><span class="suave">{{ d.glosas.glosadas }} de {{ d.glosas.radicadas }} radicadas</span></li>
+  <li class="kpi"><span class="kpi-n">{{ d.glosas.pct_valor|pct }}</span><span class="kpi-t">Valor glosado</span><span class="suave">{{ d.glosas.valor_glosado|cop }} de {{ d.glosas.valor_radicado|cop }}</span></li>
+  <li class="kpi"><span class="kpi-n">{{ d.tiempos.promedio_dias|floatformat:1 }} d</span><span class="kpi-t">Egreso → radicación</span><span class="suave">promedio de {{ d.tiempos.n }} cuentas</span></li>
+  <li class="kpi"><span class="kpi-n">{{ d.tiempos.pct_en_plazo|pct }}</span><span class="kpi-t">Radicadas en plazo</span><span class="suave">días hábiles ≤ plazo de la entidad</span></li>
+</ul>
+
+<div class="rejilla">
+  <section class="tarjeta" aria-labelledby="h-c">
+    <h2 id="h-c">Causales de glosa</h2>
+    {% if d.causas %}
+    <ul class="barras">
+      {% for c in d.causas %}
+      <li><span class="b-et">{{ c.causal }}</span>
+        <span class="b-pista"><span class="b-barra" style="width: {{ c.ancho }}%"></span></span>
+        <span class="b-val">{{ c.n }} · {{ c.pct|pct }}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="vacio">Aún no hay glosas registradas.</p>{% endif %}
+  </section>
+
+  <section class="tarjeta" aria-labelledby="h-e">
+    <h2 id="h-e">Glosas por entidad</h2>
+    {% if d.entidades %}
+    <div class="tabla-responsive"><table class="tabla">
+      <thead><tr><th>Entidad</th><th class="num">Radicadas</th><th class="num">Glosadas</th><th class="num">% cuentas</th><th class="num">% valor</th></tr></thead>
+      <tbody>{% for e in d.entidades %}
+        <tr><td data-label="Entidad">{{ e.entidad }}</td><td data-label="Radicadas" class="num">{{ e.radicadas }}</td><td data-label="Glosadas" class="num">{{ e.glosadas }}</td><td data-label="% cuentas" class="num">{{ e.pct_cuentas|pct }}</td><td data-label="% valor" class="num">{{ e.pct_valor|pct }}</td></tr>
+      {% endfor %}</tbody></table></div>
+    {% else %}<p class="vacio">Sin cuentas radicadas.</p>{% endif %}
+  </section>
+</div>
+
+<section class="tarjeta" aria-labelledby="h-s">
+  <h2 id="h-s">Cuentas por estado</h2>
+  <ul class="barras">
+    {% for valor, par in d.estados.items %}
+    <li><span class="b-et">{{ par.0 }}</span><span class="b-val">{{ par.1 }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

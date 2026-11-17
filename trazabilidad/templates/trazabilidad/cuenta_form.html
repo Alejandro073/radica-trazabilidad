@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Nueva cuenta{% endblock %}
+{% block contenido %}
+<p><a href="{% url 'cuenta_lista' %}">← Volver a cuentas</a></p>
+<section class="tarjeta">
+  <h1>Nueva cuenta médica</h1>
+  <p class="suave">Registro en admisión. La cuenta nace en estado «Admitida» y queda con su primer evento de trazabilidad.</p>
+  <form method="post" class="formulario" novalidate>
+    {% csrf_token %}
+    {% for campo in form %}
+    <div class="campo {% if campo.errors %}con-error{% endif %}">
+      <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+      {{ campo }}
+      {% for e in campo.errors %}<p class="error" role="alert">{{ e }}</p>{% endfor %}
+    </div>
+    {% endfor %}
+    <div class="acciones"><button class="btn" type="submit">Crear cuenta</button>
+    <a class="btn btn-sec" href="{% url 'cuenta_lista' %}">Cancelar</a></div>
+  </form>
+</section>
+{% endblock %}
