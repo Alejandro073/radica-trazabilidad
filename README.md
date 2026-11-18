@@ -7,13 +7,13 @@ Universidad Nacional Abierta y a Distancia (UNAD) · Ingeniería de Sistemas · 
 - **Tutor:** Daniel Andrés Guzmán Arévalo
 - **Pila tecnológica:** Python 3.12 · Django 5 · PostgreSQL 16 · arquitectura de tres capas · Scrum (sprints 0–4)
 
-> ⚠️ **Los datos son sintéticos.** Ningún dato real de pacientes ni de Corposalud SAS está en este repositorio (Ley 1581 de 2012). Las tasas de glosa de la demostración imitan el orden de magnitud del diagnóstico, nada más.
+> **Los datos son sintéticos.** Ningún dato real de pacientes ni de Corposalud SAS está en este repositorio (Ley 1581 de 2012). Las tasas de glosa de la demostración imitan el orden de magnitud del diagnóstico, nada más.
 
 ## URL de pruebas y credenciales
 
 | | |
 |---|---|
-| URL pública de pruebas | _(completar tras el despliegue en Render, ver `docs/despliegue.md`)_ |
+| URL pública de pruebas | _https://radica.onrender.com/_ |
 | Usuario / rol | `admision` (Admisión) · `facturacion` (Facturación) · `auditoria` (Auditoría) · `admin` (Administrador) |
 | Contraseña | La definida en `DEMO_PASSWORD` (por defecto `Radica2026!`, solo para la demostración) |
 
